@@ -43,7 +43,7 @@ class CmdWnd {
         if (!this.tokens) { this.tokens = []; }
         this.tokens.push(token); 
         this.contents[token.ixRow][token.ixCol] = token.token;
-        this.Draw();
+        
         this.CheckSanity();
     }
     MoveToken(toMove: Token, deltaRow: number, deltaCol: number): void {
@@ -65,7 +65,6 @@ class CmdWnd {
         toMove.ixCol += deltaCol;
         console.log("New destination row: " + toMove.ixRow + "col " + toMove.ixCol);
         this.Draw();
-       // this.AddToken(toMove);
     }
     CheckCanMoveLr(toMove: Token, deltaCol: number): boolean {
         if (deltaCol == 0) {
@@ -105,7 +104,36 @@ class CmdWnd {
         }
         return true; 
     }
-
+    private _clearGridAtRow(ixRow: number, ixCol: number): void {
+        var filtered = this.tokens.filter(el => {
+            return el.ixRow == ixRow
+                && el.ixCol == ixCol;
+        });
+        if (filtered && filtered.length > 0) {
+            var delme: Token = filtered[0];
+            var ixDelme: number = this.tokens.indexOf(delme);
+            this.tokens.slice(ixDelme, 1);
+        }
+    }
+    ClearGridAt(ixRow: number, ixCol: number): void {
+        //find a token if there is one, and delete it. 
+        this._clearGridAtRow(ixRow, ixCol);
+        //then draw the board. 
+        
+    }
+    ClearRandomGridSquare(): void {
+        var ixRow: number = Math.floor(Math.random() * this.NUM_ROWS + 1);
+        var ixCol: number = Math.floor(Math.random() * this.NUM_COLS + 1);
+        this.ClearGridAt(ixRow, ixCol);
+    }
+    ClearNRandomGridSquares(n: number) : void {
+        for (var i = 0; i < n; i++) {
+            var ixToken: number = Math.floor(Math.random() * this.NUM_ROWS + 1);
+            if (this.tokens[ixToken].token != "@") {
+                this.tokens.slice(ixToken, 1);
+            }
+        }
+    }
     CheckSanity(): void {
         for (var row = 0; row < this.contents.length; row++) {
             if (this.contents[row].length != this.NUM_COLS) {
@@ -142,5 +170,18 @@ class Wall {
             destination.AddToken(this.wall[ixTok]);
         }
     }
-
+    static MakeWallGrid(destination: CmdWnd) {
+        var height: number = destination.NUM_ROWS;
+        var width: number = destination.NUM_COLS;
+        //make vertical walls; 
+        for (var ixCol = 1; ixCol < width - 1; ixCol += 2) {
+            var wall: Wall = new Wall(0, ixCol, height, 1);
+            wall.AddToBoard(destination);
+        } 
+        //make horizontal walls;
+        for (var ixRow = 1; ixRow < height - 1; ixRow += 2) {
+            var wall: Wall = new Wall(ixRow, 0, 1, width);
+            wall.AddToBoard(destination);
+        }
+    }
 }

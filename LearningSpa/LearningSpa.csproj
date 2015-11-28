@@ -29,6 +29,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="cmd.ts" />
+    <TypeScriptCompile Include="gameCalculators.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">

@@ -1,4 +1,5 @@
-﻿/// <reference path="cmd.ts" />
+﻿/// <reference path="gamecalculators.ts" />
+/// <reference path="cmd.ts" />
 namespace SomeNamespace {
     export class Foo { }
 }
@@ -157,9 +158,37 @@ window.onload = () => {
         cmdWnd.AddToken(ang);
         wall.AddToBoard(cmdWnd);
         wall2.AddToBoard(cmdWnd);
+        cmdWnd.Draw();
     }
     greeter.start();
     window.onkeydown = (ev: KeyboardEvent) => {
         handleKeyDown(ev, cmdWnd, ang);
+    }
+    var mazer = document.getElementById('drawMaze');
+    mazer.onclick = () => {
+        cmdWnd = new CmdWnd(board);
+        var mazeAng: Token = new Token("@", cmdWnd.NUM_ROWS - 1, 0);
+        cmdWnd.AddToken(mazeAng);
+        Wall.MakeWallGrid(cmdWnd);
+        cmdWnd.Draw();
+        cmdWnd.ClearGridAt(mazeAng.ixRow, mazeAng.ixCol + 1);
+        cmdWnd.ClearGridAt(mazeAng.ixRow - 1, mazeAng.ixCol);
+        var goal: Token = new Token('*', 0, cmdWnd.NUM_COLS - 1);
+        var ready: boolean = false; 
+        var countRandomDeletions: number = 50; 
+        while (!ready) {
+            var dfs: CalculatorApi = new CalculatorApi(cmdWnd, mazeAng);
+            ready = dfs.IsReachable(goal);
+            if (!ready) {
+                cmdWnd.ClearNRandomGridSquares(countRandomDeletions);
+            }
+        }
+        function done() {
+            cmdWnd.Draw();
+            window.onkeydown = (ev: KeyboardEvent) => {
+                handleKeyDown(ev, cmdWnd, mazeAng);
+            }
+        }
+        done();
     }
 };
