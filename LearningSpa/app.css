@@ -1,0 +1,10 @@
+﻿body {
+    font-family: 'Segoe UI', sans-serif;
+}
+div.gameboard {
+    font-family: "Courier New", Courier, monospace;
+}
+
+span {
+    font-style: italic;
+}
