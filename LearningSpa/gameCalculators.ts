@@ -17,6 +17,9 @@ class CalculatorApi {
         while (stack.length > 0) {
             var here = stack.pop();
             var ixReached = this.RowColToInternalIx(here.ixRow, here.ixCol);
+            if (this.reachable[ixReached]) {
+                continue;
+            }
             this.reachable[ixReached] = true;
             var adj: Token[] = this.GetAdj(here, this.graph);
             for (var i = 0; i < adj.length; i++) {
@@ -29,6 +32,7 @@ class CalculatorApi {
         return this.reachable[ixReachable];
     }
     private GetAdj(here: Token, graph: CmdWnd): Token[] {
+        graph.UpdateContents();
         var retval: Token[] = [];
         var up: string = graph.GetCharAt(here.ixRow - 1, here.ixCol);
         if (up == '*') {
@@ -39,7 +43,7 @@ class CalculatorApi {
             retval.push(new Token(down, here.ixRow + 1, here.ixCol));
         }
         var left: string = graph.GetCharAt(here.ixRow, here.ixCol - 1);
-        if (down == '*') {
+        if (left == '*') {
             retval.push(new Token(down, here.ixRow, here.ixCol - 1));
         }
         var right: string = graph.GetCharAt(here.ixRow, here.ixCol + 1);

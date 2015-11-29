@@ -8,12 +8,16 @@ class CmdWnd {
     parent: HTMLElement;
     tokens: Token[];
     constructor(parent: HTMLElement) {
+        this.isVictory = false;
         this.parent = parent;
         this.tokens = [];
         this.InitBlankGrid();
     }
     GetCharAt(row: number, column: number): string {
         if (row >= this.NUM_ROWS || column >= this.NUM_COLS) {
+            return "";
+        }
+        if (row < 0 || column < 0) {
             return "";
         }
         return this.contents[row][column];
@@ -28,13 +32,16 @@ class CmdWnd {
             this.contents.push(newRow);
         }
     }
-    Draw(): void {
-        this.parent.innerHTML = "";
+    UpdateContents(): void {
         this.InitBlankGrid();
         for (var ixToken = 0; ixToken < this.tokens.length; ixToken++) {
             var currentToken = this.tokens[ixToken];
             this.contents[currentToken.ixRow][currentToken.ixCol] = currentToken.token;
         }
+    }
+    Draw(): void {
+        this.parent.innerHTML = "";
+        this.UpdateContents();
         for (var row = 0; row < this.NUM_ROWS; row++) {
             this.parent.innerHTML += this.contents[row].join("") + "</br>";
         }
@@ -50,7 +57,6 @@ class CmdWnd {
         if (this.tokens.indexOf(toMove) < 0) {
             throw Error("Tried to move nonexistent token.");
         }
-        console.log("attempting to move: " + toMove.token + " " + toMove.ixRow + " " + toMove.ixCol); 
         //clear current position
         var colsCheck: boolean = this.CheckCanMoveLr(toMove, deltaCol);
         var rowsCheck: boolean = this.CheckCanMoreUd(toMove, deltaRow);
@@ -63,9 +69,19 @@ class CmdWnd {
         //update position.
         toMove.ixRow += deltaRow;
         toMove.ixCol += deltaCol;
-        console.log("New destination row: " + toMove.ixRow + "col " + toMove.ixCol);
+        if (toMove.token == "@" && toMove.ixRow == 0 && toMove.ixCol == this.NUM_COLS - 1) {
+            this.isVictory = true;
+        }
         this.Draw();
     }
+    CheckIsVictory(): boolean {
+        return this._checkIsVictory();
+    }
+    private isVictory: boolean; 
+    private _checkIsVictory(): boolean {
+        return this.isVictory;
+    }
+
     CheckCanMoveLr(toMove: Token, deltaCol: number): boolean {
         if (deltaCol == 0) {
             return true;
@@ -105,6 +121,7 @@ class CmdWnd {
         return true; 
     }
     private _clearGridAtRow(ixRow: number, ixCol: number): void {
+        var lengthBeforeDeletion = this.tokens.length; 
         var filtered = this.tokens.filter(el => {
             return el.ixRow == ixRow
                 && el.ixCol == ixCol;
@@ -112,14 +129,15 @@ class CmdWnd {
         if (filtered && filtered.length > 0) {
             var delme: Token = filtered[0];
             var ixDelme: number = this.tokens.indexOf(delme);
-            this.tokens.slice(ixDelme, 1);
+            this.tokens.splice(ixDelme, 1);
+            var lengthAfterDeletion = this.tokens.length;
         }
     }
     ClearGridAt(ixRow: number, ixCol: number): void {
         //find a token if there is one, and delete it. 
         this._clearGridAtRow(ixRow, ixCol);
         //then draw the board. 
-        
+        this.Draw();
     }
     ClearRandomGridSquare(): void {
         var ixRow: number = Math.floor(Math.random() * this.NUM_ROWS + 1);
@@ -128,9 +146,9 @@ class CmdWnd {
     }
     ClearNRandomGridSquares(n: number) : void {
         for (var i = 0; i < n; i++) {
-            var ixToken: number = Math.floor(Math.random() * this.NUM_ROWS + 1);
+            var ixToken: number = Math.floor(Math.random() * this.tokens.length);
             if (this.tokens[ixToken].token != "@") {
-                this.tokens.slice(ixToken, 1);
+                this.tokens.splice(ixToken, 1);
             }
         }
     }
