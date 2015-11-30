@@ -4,6 +4,11 @@
 div.gameboard {
     font-family: "Courier New", Courier, monospace;
 }
+div#stats {
+    font-family: "Courier New", Courier, monospace;
+    color:red;
+    float:right;
+}
 
 span {
     font-style: italic;

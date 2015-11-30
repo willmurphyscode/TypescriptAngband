@@ -155,6 +155,8 @@ window.onload = () => {
     }
     var board = document.getElementById('board');
     var drawer = document.getElementById('drawGame');
+    var stats = document.getElementById('stats');
+    var statsDiv = new StatsDiv(stats);
     var cmdWnd: CmdWnd;
     var ang: Token = new Token("@", 7, 35);
     var wall: Wall = new Wall(10, 10, 1, 34); 
@@ -166,7 +168,7 @@ window.onload = () => {
         wall.AddToBoard(cmdWnd);
         wall2.AddToBoard(cmdWnd);
         cmdWnd.Draw();
-        var game: DungeonManager = new DungeonManager(cmdWnd, ang, 25, 0);
+        var game: DungeonManager = new DungeonManager(cmdWnd, statsDiv, ang, 25, 0);
         window.onkeydown = (ev: KeyboardEvent) => {
             game.ActOnKeyDown(ev);
         };
