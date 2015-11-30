@@ -1,4 +1,5 @@
-﻿/// <reference path="gamecalculators.ts" />
+﻿/// <reference path="dungeonmanager.ts" />
+/// <reference path="gamecalculators.ts" />
 /// <reference path="cmd.ts" />
 namespace SomeNamespace {
     export class Foo { }
@@ -165,11 +166,13 @@ window.onload = () => {
         wall.AddToBoard(cmdWnd);
         wall2.AddToBoard(cmdWnd);
         cmdWnd.Draw();
+        var game: DungeonManager = new DungeonManager(cmdWnd, ang, 25, 0);
+        window.onkeydown = (ev: KeyboardEvent) => {
+            game.ActOnKeyDown(ev);
+        };
     }
     greeter.start();
-    window.onkeydown = (ev: KeyboardEvent) => {
-        handleKeyDown(ev, cmdWnd, ang);
-    }
+
     var mazer = document.getElementById('drawMaze');
     mazer.onclick = () => {
         cmdWnd = new CmdWnd(board);

@@ -39,6 +39,13 @@ class CmdWnd {
             this.contents[currentToken.ixRow][currentToken.ixCol] = currentToken.token;
         }
     }
+    IsGridCoordOccupied(ixRow: number, ixCol: number) : boolean  {
+        if (ixRow >= this.NUM_ROWS || ixCol >= this.NUM_COLS) {
+            return true; 
+        }
+        this.UpdateContents();
+        return this.contents[ixRow][ixCol] == "*";
+    }
     Draw(): void {
         this.parent.innerHTML = "";
         this.UpdateContents();
@@ -53,7 +60,7 @@ class CmdWnd {
         
         this.CheckSanity();
     }
-    MoveToken(toMove: Token, deltaRow: number, deltaCol: number): void {
+    MoveToken(toMove: Token, deltaRow: number, deltaCol: number): boolean {
         if (this.tokens.indexOf(toMove) < 0) {
             throw Error("Tried to move nonexistent token.");
         }
@@ -61,7 +68,7 @@ class CmdWnd {
         var colsCheck: boolean = this.CheckCanMoveLr(toMove, deltaCol);
         var rowsCheck: boolean = this.CheckCanMoreUd(toMove, deltaRow);
         if (!(colsCheck && rowsCheck)) {
-            return;
+            return false;
         }
         this.contents[toMove.ixRow][toMove.ixCol] = "*";
         //var ix = this.tokens.indexOf(toMove);
@@ -73,6 +80,7 @@ class CmdWnd {
             this.isVictory = true;
         }
         this.Draw();
+        return true; 
     }
     CheckIsVictory(): boolean {
         return this._checkIsVictory();
