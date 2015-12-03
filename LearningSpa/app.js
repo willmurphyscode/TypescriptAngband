@@ -1,3 +1,5 @@
+/// <reference path="dungeonmanager.ts" />
+/// <reference path="gamecalculators.ts" />
 /// <reference path="cmd.ts" />
 var SomeNamespace;
 (function (SomeNamespace) {
@@ -116,6 +118,13 @@ function handleKeyDown(evt, cmdWnd, tok) {
             cmdWnd.MoveToken(tok, 1, 0);
             break;
     }
+    if (cmdWnd.CheckIsVictory()) {
+        var again = confirm("You won! Would you like to play again?");
+        if (again) {
+            var mazer = document.getElementById('drawMaze');
+            mazer.click();
+        }
+    }
 }
 window.onload = function () {
     var el = document.getElementById('content');
@@ -136,6 +145,8 @@ window.onload = function () {
     };
     var board = document.getElementById('board');
     var drawer = document.getElementById('drawGame');
+    var stats = document.getElementById('stats');
+    var statsDiv = new StatsDiv(stats);
     var cmdWnd;
     var ang = new Token("@", 7, 35);
     var wall = new Wall(10, 10, 1, 34);
@@ -146,10 +157,53 @@ window.onload = function () {
         cmdWnd.AddToken(ang);
         wall.AddToBoard(cmdWnd);
         wall2.AddToBoard(cmdWnd);
+        cmdWnd.Draw();
+        var game = new DungeonManager(cmdWnd, statsDiv, ang, 25, 0);
+        window.onkeydown = function (ev) {
+            game.ActOnKeyDown(ev);
+        };
     };
     greeter.start();
-    window.onkeydown = function (ev) {
-        handleKeyDown(ev, cmdWnd, ang);
+    var mazer = document.getElementById('drawMaze');
+    mazer.onclick = function () {
+        cmdWnd = new CmdWnd(board);
+        var mazeAng = new Token("@", cmdWnd.NUM_ROWS - 1, 0);
+        cmdWnd.AddToken(mazeAng);
+        Wall.MakeWallGrid(cmdWnd);
+        cmdWnd.Draw();
+        cmdWnd.ClearGridAt(mazeAng.ixRow, mazeAng.ixCol + 1);
+        cmdWnd.ClearGridAt(mazeAng.ixRow - 1, mazeAng.ixCol);
+        for (var i = 1; i < Math.min(cmdWnd.NUM_COLS - 50, 20); i++) {
+            cmdWnd.ClearGridAt(mazeAng.ixRow, i);
+        }
+        cmdWnd.Draw();
+        var dfs = new CalculatorApi(cmdWnd, mazeAng);
+        var goal = new Token('*', 0, cmdWnd.NUM_COLS - 1);
+        var ready = false;
+        var countRandomDeletions = 50;
+        var maxReps = 100;
+        var curReps = 0;
+        while (!ready) {
+            if (curReps++ > maxReps) {
+                break;
+            }
+            var dfs = new CalculatorApi(cmdWnd, mazeAng);
+            ready = dfs.IsReachable(goal);
+            console.log("After " + curReps + " there are " + dfs.reachable.filter(function (el) {
+                return el;
+            }).length + " reachable squares");
+            if (!ready) {
+                cmdWnd.ClearNRandomGridSquares(countRandomDeletions);
+            }
+        }
+        function done() {
+            cmdWnd.Draw();
+            window.onkeydown = function (ev) {
+                handleKeyDown(ev, cmdWnd, mazeAng);
+            };
+        }
+        cmdWnd.Draw();
+        done();
     };
 };
 //# sourceMappingURL=app.js.map

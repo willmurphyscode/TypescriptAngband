@@ -11,12 +11,16 @@ var CmdWnd = (function () {
     function CmdWnd(parent) {
         this.NUM_COLS = 80;
         this.NUM_ROWS = 25;
+        this.isVictory = false;
         this.parent = parent;
         this.tokens = [];
         this.InitBlankGrid();
     }
     CmdWnd.prototype.GetCharAt = function (row, column) {
         if (row >= this.NUM_ROWS || column >= this.NUM_COLS) {
+            return "";
+        }
+        if (row < 0 || column < 0) {
             return "";
         }
         return this.contents[row][column];
@@ -31,13 +35,23 @@ var CmdWnd = (function () {
             this.contents.push(newRow);
         }
     };
-    CmdWnd.prototype.Draw = function () {
-        this.parent.innerHTML = "";
+    CmdWnd.prototype.UpdateContents = function () {
         this.InitBlankGrid();
         for (var ixToken = 0; ixToken < this.tokens.length; ixToken++) {
             var currentToken = this.tokens[ixToken];
             this.contents[currentToken.ixRow][currentToken.ixCol] = currentToken.token;
         }
+    };
+    CmdWnd.prototype.IsGridCoordOccupied = function (ixRow, ixCol) {
+        if (ixRow >= this.NUM_ROWS || ixCol >= this.NUM_COLS) {
+            return true;
+        }
+        this.UpdateContents();
+        return this.contents[ixRow][ixCol] == "*";
+    };
+    CmdWnd.prototype.Draw = function () {
+        this.parent.innerHTML = "";
+        this.UpdateContents();
         for (var row = 0; row < this.NUM_ROWS; row++) {
             this.parent.innerHTML += this.contents[row].join("") + "</br>";
         }
@@ -48,19 +62,17 @@ var CmdWnd = (function () {
         }
         this.tokens.push(token);
         this.contents[token.ixRow][token.ixCol] = token.token;
-        this.Draw();
         this.CheckSanity();
     };
     CmdWnd.prototype.MoveToken = function (toMove, deltaRow, deltaCol) {
         if (this.tokens.indexOf(toMove) < 0) {
             throw Error("Tried to move nonexistent token.");
         }
-        console.log("attempting to move: " + toMove.token + " " + toMove.ixRow + " " + toMove.ixCol);
         //clear current position
         var colsCheck = this.CheckCanMoveLr(toMove, deltaCol);
         var rowsCheck = this.CheckCanMoreUd(toMove, deltaRow);
         if (!(colsCheck && rowsCheck)) {
-            return;
+            return false;
         }
         this.contents[toMove.ixRow][toMove.ixCol] = "*";
         //var ix = this.tokens.indexOf(toMove);
@@ -68,9 +80,17 @@ var CmdWnd = (function () {
         //update position.
         toMove.ixRow += deltaRow;
         toMove.ixCol += deltaCol;
-        console.log("New destination row: " + toMove.ixRow + "col " + toMove.ixCol);
+        if (toMove.token == "@" && toMove.ixRow == 0 && toMove.ixCol == this.NUM_COLS - 1) {
+            this.isVictory = true;
+        }
         this.Draw();
-        // this.AddToken(toMove);
+        return true;
+    };
+    CmdWnd.prototype.CheckIsVictory = function () {
+        return this._checkIsVictory();
+    };
+    CmdWnd.prototype._checkIsVictory = function () {
+        return this.isVictory;
     };
     CmdWnd.prototype.CheckCanMoveLr = function (toMove, deltaCol) {
         if (deltaCol == 0) {
@@ -110,6 +130,38 @@ var CmdWnd = (function () {
         }
         return true;
     };
+    CmdWnd.prototype._clearGridAtRow = function (ixRow, ixCol) {
+        var lengthBeforeDeletion = this.tokens.length;
+        var filtered = this.tokens.filter(function (el) {
+            return el.ixRow == ixRow
+                && el.ixCol == ixCol;
+        });
+        if (filtered && filtered.length > 0) {
+            var delme = filtered[0];
+            var ixDelme = this.tokens.indexOf(delme);
+            this.tokens.splice(ixDelme, 1);
+            var lengthAfterDeletion = this.tokens.length;
+        }
+    };
+    CmdWnd.prototype.ClearGridAt = function (ixRow, ixCol) {
+        //find a token if there is one, and delete it. 
+        this._clearGridAtRow(ixRow, ixCol);
+        //then draw the board. 
+        this.Draw();
+    };
+    CmdWnd.prototype.ClearRandomGridSquare = function () {
+        var ixRow = Math.floor(Math.random() * this.NUM_ROWS + 1);
+        var ixCol = Math.floor(Math.random() * this.NUM_COLS + 1);
+        this.ClearGridAt(ixRow, ixCol);
+    };
+    CmdWnd.prototype.ClearNRandomGridSquares = function (n) {
+        for (var i = 0; i < n; i++) {
+            var ixToken = Math.floor(Math.random() * this.tokens.length);
+            if (this.tokens[ixToken].token != "@") {
+                this.tokens.splice(ixToken, 1);
+            }
+        }
+    };
     CmdWnd.prototype.CheckSanity = function () {
         for (var row = 0; row < this.contents.length; row++) {
             if (this.contents[row].length != this.NUM_COLS) {
@@ -141,6 +193,20 @@ var Wall = (function () {
     Wall.prototype.AddToBoard = function (destination) {
         for (var ixTok = 0; ixTok < this.wall.length; ixTok++) {
             destination.AddToken(this.wall[ixTok]);
+        }
+    };
+    Wall.MakeWallGrid = function (destination) {
+        var height = destination.NUM_ROWS;
+        var width = destination.NUM_COLS;
+        //make vertical walls; 
+        for (var ixCol = 1; ixCol < width - 1; ixCol += 2) {
+            var wall = new Wall(0, ixCol, height, 1);
+            wall.AddToBoard(destination);
+        }
+        //make horizontal walls;
+        for (var ixRow = 1; ixRow < height - 1; ixRow += 2) {
+            var wall = new Wall(ixRow, 0, 1, width);
+            wall.AddToBoard(destination);
         }
     };
     return Wall;
