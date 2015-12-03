@@ -1,6 +1,4 @@
-﻿namespace SomeNamespace {
-    export class CmdWnd { }
-}
+﻿
 class CmdWnd {
     NUM_COLS = 80; 
     NUM_ROWS = 25;
@@ -21,7 +19,14 @@ class CmdWnd {
             return "";
         }
         return this.contents[row][column];
+    }
+    public RandomRogueLikeMap(): CmdWnd {
+        var retval: CmdWnd = new CmdWnd(this.parent);
+
+        return retval; 
     } 
+
+
     InitBlankGrid(): void {
         this.contents = [];
         for (var row = 0; row < this.NUM_ROWS; row++) {
@@ -62,7 +67,7 @@ class CmdWnd {
     }
     MoveToken(toMove: Token, deltaRow: number, deltaCol: number): boolean {
         if (this.tokens.indexOf(toMove) < 0) {
-            throw Error("Tried to move nonexistent token.");
+            return false; 
         }
         //clear current position
         var colsCheck: boolean = this.CheckCanMoveLr(toMove, deltaCol);
@@ -210,4 +215,65 @@ class Wall {
             wall.AddToBoard(destination);
         }
     }
+}
+
+class Region {
+    private board: CmdWnd;
+    private minRowMinCol: Vector;
+    private maxRowMaxCol: Vector; 
+    constructor(board: CmdWnd, minRowMinCol: Vector, maxRowMaxCol : Vector) {
+        this.board = board;
+        this.minRowMinCol = minRowMinCol;
+        this.maxRowMaxCol = maxRowMaxCol;
+    }
+    public WallIn(numGaps: number) : void {
+        //min col vertical wall
+        var minColVerticalWall = new Wall(this.minRowMinCol.deltaRow, this.minRowMinCol.deltaCol, (this.maxRowMaxCol.deltaRow - this.minRowMinCol.deltaRow), 1);
+        minColVerticalWall.AddToBoard(this.board);
+        //max col vertical wall
+        var maxColVerticalWall = new Wall(this.maxRowMaxCol.deltaRow, this.maxRowMaxCol.deltaCol, (this.maxRowMaxCol.deltaRow - this.minRowMinCol.deltaRow), 1);
+        maxColVerticalWall.AddToBoard(this.board);
+        //min row horizontal wall
+        var minRowHorizontalWall = new Wall(this.minRowMinCol.deltaRow, this.minRowMinCol.deltaCol, 1, (this.maxRowMaxCol.deltaCol - this.minRowMinCol.deltaCol));
+        minRowHorizontalWall.AddToBoard(this.board);
+
+        //max row horizontal wall
+        var maxRowHorizontalWall = new Wall(this.maxRowMaxCol.deltaRow, this.minRowMinCol.deltaCol, 1, (this.maxRowMaxCol.deltaCol - this.minRowMinCol.deltaCol));
+        minRowHorizontalWall.AddToBoard(this.board);
+
+        //make gaps.
+        for (var countGaps: number = 0; countGaps < numGaps; countGaps++) {
+            var d4 = Math.floor(Math.random() * 4);
+            var gapCoords: Vector; 
+            switch (d4) {
+                case 0:
+                    gapCoords = this.coordsForRandomGap(minColVerticalWall);
+                    break; 
+                case 1:
+                    gapCoords = this.coordsForRandomGap(maxColVerticalWall);
+                    break; 
+                case 2:
+                    gapCoords = this.coordsForRandomGap(minRowHorizontalWall);
+                    break; 
+                case 3:
+                    gapCoords = this.coordsForRandomGap(maxRowHorizontalWall);
+                    break; 
+                default:
+                    throw Error("Invalid d4");
+            }
+            this.board.ClearGridAt(gapCoords.deltaRow, gapCoords.deltaCol);
+        }
+    }
+    public RandomSubRegion(): Region {
+        //var rowSpan = this.maxRowMaxCol.deltaRow - this.minRowMinCol.deltaRow;
+        //var newMinIxRow = this.minRowMinCol.deltaRow + (Math.floor(Math.random() * rowSpan / 2));
+        //var newMaxIxRow = this.minRowMinCol.deltaRow + Math.floor(rowSpan / 2) + (Math.floor(Math.random() * rowSpan / 2));
+
+        throw Error("not implemented"); 
+    }
+    private coordsForRandomGap(wall: Wall): Vector {
+        var tokenToRemove = wall.wall[Math.floor(Math.random() * wall.wall.length)];
+        return new Vector(tokenToRemove.ixRow, tokenToRemove.ixCol);
+    }
+
 }

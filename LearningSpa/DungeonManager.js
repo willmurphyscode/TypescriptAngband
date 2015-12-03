@@ -91,6 +91,8 @@ var DungeonManager = (function () {
     DungeonManager.prototype.Defeated = function () {
         alert("Oh dear, you have been mauled by a tiger. You lose.");
     };
+    DungeonManager.prototype.ReInit = function () {
+    };
     DungeonManager.prototype._handleCollision = function (collision) {
         //debug
         console.log("A " + collision.initiator.token + " hit a " + collision.collided.token + "!");
@@ -98,7 +100,14 @@ var DungeonManager = (function () {
         if (collision.initiator.token == "T" && collision.collided == this._player) {
             this._playerHp--;
         }
-        this._stats.OverwriteMessae("HP: " + this._playerHp + "/10", "hp");
+        if (collision.initiator == this._player && collision.collided.token != "T") {
+            this._playerPoints++;
+            this._gameBoard.ClearGridAt(collision.collided.ixRow, collision.collided.ixCol);
+            var playersMove = Vector.VectorTowards(this._player, collision.collided, 1);
+            this._gameBoard.MoveToken(this._player, playersMove.deltaRow, playersMove.deltaCol);
+        }
+        this._stats.OverwriteMessage("HP: " + this._playerHp + "/10", "hp");
+        this._stats.OverwriteMessage("Kills: " + this._playerPoints, "kills");
     };
     DungeonManager.prototype._handleMove = function (move) {
         move.Move();
@@ -243,7 +252,7 @@ var StatsDiv = (function () {
         this._contents[messageId] = msg;
         this.Draw();
     };
-    StatsDiv.prototype.OverwriteMessae = function (newMessageContents, existingMessageId) {
+    StatsDiv.prototype.OverwriteMessage = function (newMessageContents, existingMessageId) {
         var success = false;
         try {
             var msg = this._contents[existingMessageId];

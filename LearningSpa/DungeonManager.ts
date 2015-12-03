@@ -95,6 +95,10 @@ class DungeonManager {
     }
     private Defeated(): void {
         alert("Oh dear, you have been mauled by a tiger. You lose.");
+        
+    }
+    public ReInit(): void {
+
     }
 
     private _handleCollision(collision: Collision): void {
@@ -104,7 +108,14 @@ class DungeonManager {
         if (collision.initiator.token == "T" && collision.collided == this._player) {
             this._playerHp--;
         }
-        this._stats.OverwriteMessae("HP: " + this._playerHp + "/10", "hp");
+        if (collision.initiator == this._player && collision.collided.token != "T") {
+            this._playerPoints++;
+            this._gameBoard.ClearGridAt(collision.collided.ixRow, collision.collided.ixCol);
+            var playersMove: Vector = Vector.VectorTowards(this._player, collision.collided, 1);
+            this._gameBoard.MoveToken(this._player, playersMove.deltaRow, playersMove.deltaCol);
+        }
+        this._stats.OverwriteMessage("HP: " + this._playerHp + "/10", "hp");
+        this._stats.OverwriteMessage("Kills: " + this._playerPoints, "kills");
     }
     private _handleMove(move: Move): void {
         move.Move();
@@ -249,7 +260,7 @@ class StatsDiv {
         this._contents[messageId] = msg;
         this.Draw();
     }
-    public OverwriteMessae(newMessageContents: string, existingMessageId: string) : boolean {
+    public OverwriteMessage(newMessageContents: string, existingMessageId: string) : boolean {
         var success: boolean = false; 
         try {
             var msg = this._contents[existingMessageId];

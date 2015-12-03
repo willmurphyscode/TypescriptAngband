@@ -1,12 +1,3 @@
-var SomeNamespace;
-(function (SomeNamespace) {
-    var CmdWnd = (function () {
-        function CmdWnd() {
-        }
-        return CmdWnd;
-    })();
-    SomeNamespace.CmdWnd = CmdWnd;
-})(SomeNamespace || (SomeNamespace = {}));
 var CmdWnd = (function () {
     function CmdWnd(parent) {
         this.NUM_COLS = 80;
@@ -24,6 +15,10 @@ var CmdWnd = (function () {
             return "";
         }
         return this.contents[row][column];
+    };
+    CmdWnd.prototype.RandomRogueLikeMap = function () {
+        var retval = new CmdWnd(this.parent);
+        return retval;
     };
     CmdWnd.prototype.InitBlankGrid = function () {
         this.contents = [];
@@ -66,7 +61,7 @@ var CmdWnd = (function () {
     };
     CmdWnd.prototype.MoveToken = function (toMove, deltaRow, deltaCol) {
         if (this.tokens.indexOf(toMove) < 0) {
-            throw Error("Tried to move nonexistent token.");
+            return false;
         }
         //clear current position
         var colsCheck = this.CheckCanMoveLr(toMove, deltaCol);
@@ -210,5 +205,59 @@ var Wall = (function () {
         }
     };
     return Wall;
+})();
+var Region = (function () {
+    function Region(board, minRowMinCol, maxRowMaxCol) {
+        this.board = board;
+        this.minRowMinCol = minRowMinCol;
+        this.maxRowMaxCol = maxRowMaxCol;
+    }
+    Region.prototype.WallIn = function (numGaps) {
+        //min col vertical wall
+        var minColVerticalWall = new Wall(this.minRowMinCol.deltaRow, this.minRowMinCol.deltaCol, (this.maxRowMaxCol.deltaRow - this.minRowMinCol.deltaRow), 1);
+        minColVerticalWall.AddToBoard(this.board);
+        //max col vertical wall
+        var maxColVerticalWall = new Wall(this.maxRowMaxCol.deltaRow, this.maxRowMaxCol.deltaCol, (this.maxRowMaxCol.deltaRow - this.minRowMinCol.deltaRow), 1);
+        maxColVerticalWall.AddToBoard(this.board);
+        //min row horizontal wall
+        var minRowHorizontalWall = new Wall(this.minRowMinCol.deltaRow, this.minRowMinCol.deltaCol, 1, (this.maxRowMaxCol.deltaCol - this.minRowMinCol.deltaCol));
+        minRowHorizontalWall.AddToBoard(this.board);
+        //max row horizontal wall
+        var maxRowHorizontalWall = new Wall(this.maxRowMaxCol.deltaRow, this.minRowMinCol.deltaCol, 1, (this.maxRowMaxCol.deltaCol - this.minRowMinCol.deltaCol));
+        minRowHorizontalWall.AddToBoard(this.board);
+        //make gaps.
+        for (var countGaps = 0; countGaps < numGaps; countGaps++) {
+            var d4 = Math.floor(Math.random() * 4);
+            var gapCoords;
+            switch (d4) {
+                case 0:
+                    gapCoords = this.coordsForRandomGap(minColVerticalWall);
+                    break;
+                case 1:
+                    gapCoords = this.coordsForRandomGap(maxColVerticalWall);
+                    break;
+                case 2:
+                    gapCoords = this.coordsForRandomGap(minRowHorizontalWall);
+                    break;
+                case 3:
+                    gapCoords = this.coordsForRandomGap(maxRowHorizontalWall);
+                    break;
+                default:
+                    throw Error("Invalid d4");
+            }
+            this.board.ClearGridAt(gapCoords.deltaRow, gapCoords.deltaCol);
+        }
+    };
+    Region.prototype.RandomSubRegion = function () {
+        //var rowSpan = this.maxRowMaxCol.deltaRow - this.minRowMinCol.deltaRow;
+        //var newMinIxRow = this.minRowMinCol.deltaRow + (Math.floor(Math.random() * rowSpan / 2));
+        //var newMaxIxRow = this.minRowMinCol.deltaRow + Math.floor(rowSpan / 2) + (Math.floor(Math.random() * rowSpan / 2));
+        throw Error("not implemented");
+    };
+    Region.prototype.coordsForRandomGap = function (wall) {
+        var tokenToRemove = wall.wall[Math.floor(Math.random() * wall.wall.length)];
+        return new Vector(tokenToRemove.ixRow, tokenToRemove.ixCol);
+    };
+    return Region;
 })();
 //# sourceMappingURL=cmd.js.map
