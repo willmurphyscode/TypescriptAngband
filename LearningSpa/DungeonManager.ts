@@ -103,12 +103,12 @@ class DungeonManager {
 
     private _handleCollision(collision: Collision): void {
         //debug
-        console.log("A " + collision.initiator.token + " hit a " + collision.collided.token + "!");
+        console.log("A " + collision.initiator.GetName() + " hit a " + collision.collided.GetName() + "!");
         //endebug
-        if (collision.initiator.token == "T" && collision.collided == this._player) {
+        if (collision.initiator.GetName() == "T" && collision.collided == this._player) {
             this._playerHp--;
         }
-        if (collision.initiator == this._player && collision.collided.token != "T") {
+        if (collision.initiator == this._player && collision.collided.GetName() != "T") {
             this._playerPoints++;
             this._gameBoard.ClearGridAt(collision.collided.ixRow, collision.collided.ixCol);
             var playersMove: Vector = Vector.VectorTowards(this._player, collision.collided, 1);

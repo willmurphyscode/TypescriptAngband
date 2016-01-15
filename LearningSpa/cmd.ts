@@ -41,7 +41,7 @@ class CmdWnd {
         this.InitBlankGrid();
         for (var ixToken = 0; ixToken < this.tokens.length; ixToken++) {
             var currentToken = this.tokens[ixToken];
-            this.contents[currentToken.ixRow][currentToken.ixCol] = currentToken.token;
+            this.contents[currentToken.ixRow][currentToken.ixCol] = currentToken.Print();
         }
     }
     IsGridCoordOccupied(ixRow: number, ixCol: number) : boolean  {
@@ -61,7 +61,7 @@ class CmdWnd {
     AddToken(token: Token) {
         if (!this.tokens) { this.tokens = []; }
         this.tokens.push(token); 
-        this.contents[token.ixRow][token.ixCol] = token.token;
+        this.contents[token.ixRow][token.ixCol] = token.Print();
         
         this.CheckSanity();
     }
@@ -81,7 +81,7 @@ class CmdWnd {
         //update position.
         toMove.ixRow += deltaRow;
         toMove.ixCol += deltaCol;
-        if (toMove.token == "@" && toMove.ixRow == 0 && toMove.ixCol == this.NUM_COLS - 1) {
+        if (toMove.GetName() == "@" && toMove.ixRow == 0 && toMove.ixCol == this.NUM_COLS - 1) {
             this.isVictory = true;
         }
         this.Draw();
@@ -160,7 +160,7 @@ class CmdWnd {
     ClearNRandomGridSquares(n: number) : void {
         for (var i = 0; i < n; i++) {
             var ixToken: number = Math.floor(Math.random() * this.tokens.length);
-            if (this.tokens[ixToken].token != "@") {
+            if (this.tokens[ixToken].GetName() != "@") {
                 this.tokens.splice(ixToken, 1);
             }
         }
@@ -175,7 +175,13 @@ class CmdWnd {
 }
 
 class Token {
-    token: string; 
+    private token: string; 
+    Print(): string {
+        return this.token;
+    } 
+    GetName() {
+        return this.token; 
+    }
     ixCol: number; 
     ixRow: number; 
     constructor(tok: string, ixRow: number, ixCol: number) {
